@@ -1,0 +1,59 @@
+{
+	"name": "zod-pbf-binary-serializer",
+	"version": "1.0.0",
+	"description": "Serialize and deserialize zod schemas to and from a compact binary format",
+	"type": "module",
+	"sideEffects": false,
+	"author": {
+		"name": "Arumi Sakura",
+		"url": "https://github.com/arumi-s"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/arumi-s/zod-pbf-binary-serializer.git"
+	},
+	"keywords": [
+		"zod",
+		"binary",
+		"serialization"
+	],
+	"publishConfig": {
+		"access": "public"
+	},
+	"files": [
+		"dist"
+	],
+	"main": "./dist/index.cjs",
+	"module": "./dist/index.js",
+	"exports": {
+		"require": "./dist/index.cjs",
+		"import": "./dist/index.js"
+	},
+	"types": "./dist/index.d.ts",
+	"scripts": {
+		"build": "tsup --config tsup.config.ts",
+		"test": "vitest run",
+		"prepublishOnly": "pnpm run build"
+	},
+	"license": "MIT",
+	"peerDependencies": {
+		"zod": "^3"
+	},
+	"dependencies": {
+		"pbf": "^4.0.1"
+	},
+	"devDependencies": {
+		"@semantic-release/changelog": "^6.0.3",
+		"@semantic-release/commit-analyzer": "^13.0.0",
+		"@semantic-release/git": "^10.0.1",
+		"@semantic-release/github": "^10.1.3",
+		"@semantic-release/npm": "^12.0.1",
+		"@semantic-release/release-notes-generator": "^14.0.1",
+		"@vitest/coverage-v8": "^2.0.4",
+		"prettier": "3.3.3",
+		"semantic-release": "^24.0.0",
+		"tsup": "8.2.3",
+		"typescript": "5.5.4",
+		"vitest": "2.0.4"
+	}
+}
