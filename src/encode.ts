@@ -1,5 +1,4 @@
 import type Pbf from 'pbf';
-import type { Primitive } from 'zod';
 import type { Block, PrimitiveBlockType } from './types/block';
 
 /**
@@ -37,6 +36,8 @@ const encodeBuffer = (value: unknown, pbf: Pbf): void => {
 	pbf.writeBytes(value as Uint8Array);
 };
 
+const encodeNull = (value: unknown, pbf: Pbf): void => {};
+
 const encodeBooleanArray = (array: unknown[], pbf: Pbf): void => {
 	const bits = new Uint8Array(Math.ceil(array.length / 8));
 	for (let i = 0; i < array.length; i++) {
@@ -58,18 +59,35 @@ const chooseEncoder = (type: PrimitiveBlockType) => {
 		return encodeBoolean;
 	} else if (type === 'buffer') {
 		return encodeBuffer;
+	} else if (type === 'null') {
+		return encodeNull;
 	}
+
 	throw new Error(`Unknown type: ${type}`);
+};
+
+export const optional = (value: unknown): number => {
+	if (typeof value === 'undefined') {
+		// value not exist or value equals undefined
+		return 0;
+	}
+	if (value === null) {
+		// value exists and not null
+		return 2;
+	}
+	// value exists and is null
+	return 1;
 };
 
 export function encode(data: any, blocks: Block[], pbf: Pbf) {
 	for (const block of blocks) {
 		if (block.block === 'discriminator') {
-			const discriminatorValue = getter(data, [...block.path, block.discriminator]);
+			const discriminatorValue =
+				block.discriminator === '' ? optional(getter(data, block.path)) : getter(data, [...block.path, block.discriminator]);
 			const encoder = chooseEncoder(block.type);
 			encoder(discriminatorValue, pbf);
 
-			const selected = block.options.get(discriminatorValue as Primitive);
+			const selected = block.options.find(([key]) => key === discriminatorValue)?.[1];
 			if (selected) {
 				encode(data, selected, pbf);
 			}

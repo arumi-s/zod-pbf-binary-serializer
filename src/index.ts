@@ -4,10 +4,16 @@ import type { SerializableSchema } from './types/schema';
 import { parseSchema } from './parse';
 import { encode } from './encode';
 import { decode } from './decode';
+import { Block } from './types/block';
+
+export * from './types/block';
+export * from './types/schema';
 
 export function fromSchema<T extends SerializableSchema>(schema: T) {
-	const blocks = parseSchema(schema);
+	return fromBlocks<T>(parseSchema(schema));
+}
 
+export function fromBlocks<T extends SerializableSchema>(blocks: Block[]) {
 	return {
 		/**
 		 * get the blocks of the schema

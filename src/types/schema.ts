@@ -6,6 +6,8 @@ export type SerializableDef =
 	| z.ZodNumberDef
 	| z.ZodObjectDef
 	| z.ZodStringDef
+	| z.ZodOptionalDef<SerializableSchema>
+	| z.ZodNullableDef<SerializableSchema>
 	| z.ZodLiteralDef<SerializableSchema>
 	| z.ZodEffectsDef<SerializableSchema>
 	| z.ZodDiscriminatedUnionDef<string>;

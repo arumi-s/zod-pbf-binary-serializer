@@ -24,6 +24,8 @@ npm i zod-pbf-binary-serializer
 - z.instanceof(Uint8Array)
 - z.discriminatedUnion
 - z.literal(string | number | boolean)
+- z.optional
+- z.nullable
 
 ## Usage
 
@@ -60,6 +62,49 @@ console.log(buffer);
 const decoded = serializer.decode(buffer);
 console.log(decoded);
 // { a: 'apple', b: 123, c: true, d: ['hello', 'world'] }
+```
+
+### Export and import parsed blocks
+
+```typescript
+import { fromSchema, fromBlocks } from 'zod-pbf-binary-serializer';
+
+const schema = z.object({
+	a: z.string(),
+	b: z.number(),
+	c: z.boolean(),
+	d: z.array(z.string()),
+});
+
+const serializer = fromSchema(schema);
+
+console.log(serializer.blocks);
+/**
+ * [
+ *   {
+ *     block: 'primitive',
+ *     type: 'string',
+ *     path: ['a'],
+ *   },
+ *   {
+ *     block: 'primitive',
+ *     type: 'float',
+ *     path: ['b'],
+ *   },
+ *   {
+ *     block: 'primitive',
+ *     type: 'boolean',
+ *     path: ['c'],
+ *   },
+ *   {
+ *     block: 'array',
+ *     type: 'string',
+ *     path: ['d'],
+ *   },
+ * ]
+ */
+
+const reconstructedSerializer = fromBlocks(serializer.blocks);
 ```
 
 ## License

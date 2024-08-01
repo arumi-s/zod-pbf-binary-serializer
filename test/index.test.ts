@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { z } from 'zod';
-import { fromSchema } from '../src';
+import { fromBlocks, fromSchema, type Block } from '../src';
 
 describe('fromSchema', () => {
 	it('should work', () => {
@@ -418,25 +418,93 @@ describe('fromSchema', () => {
 			z.object({ type: z.literal(123), b: z.number() }),
 		]);
 
-		expect(() => fromSchema(schema)).toThrow('Could not determine the type of the discriminated union');
+		expect(() => fromSchema(schema)).toThrow('Could not determine the type of the discriminator');
+	});
+
+	it('should work with z.optional', () => {
+		const schema = z.object({ a: z.string(), b: z.optional(z.string()), d: z.number().int().nonnegative() });
+		const serializer = fromSchema(schema);
+
+		const dataA = { a: 'hello', b: 'world', d: 123 };
+		const dataB = { a: 'hello', d: 123 };
+
+		const bufferA = serializer.encode(dataA);
+		const bufferB = serializer.encode(dataB);
+		const decodedA = serializer.decode(bufferA);
+		const decodedB = serializer.decode(bufferB);
+
+		expect(decodedA).toEqual(dataA);
+		expect(decodedA).toHaveProperty('a');
+		expect(decodedA).toHaveProperty('b');
+		expect(decodedB).toEqual(dataB);
+		expect(decodedB).toHaveProperty('a');
+		expect(decodedB).not.toHaveProperty('b');
+	});
+
+	it('should work with z.optional object', () => {
+		const schema = z.object({ a: z.string(), b: z.optional(z.object({ c: z.string() })), d: z.number().int().nonnegative() });
+		const serializer = fromSchema(schema);
+
+		const dataA = { a: 'hello', b: { c: 'world' }, d: 123 };
+		const dataB = { a: 'hello', d: 123 };
+
+		const bufferA = serializer.encode(dataA);
+		const bufferB = serializer.encode(dataB);
+		const decodedA = serializer.decode(bufferA);
+		const decodedB = serializer.decode(bufferB);
+
+		expect(decodedA).toEqual(dataA);
+		expect(decodedA).toHaveProperty('a');
+		expect(decodedA).toHaveProperty('b');
+		expect(decodedB).toEqual(dataB);
+		expect(decodedB).toHaveProperty('a');
+		expect(decodedB).not.toHaveProperty('b');
+	});
+
+	it('should work with z.nullable', () => {
+		const schema = z.object({ a: z.string(), b: z.nullable(z.string()), d: z.number().int().nonnegative() });
+		const serializer = fromSchema(schema);
+
+		const dataA = { a: 'hello', b: 'world', d: 123 };
+		const dataB = { a: 'hello', b: null, d: 123 };
+
+		const bufferA = serializer.encode(dataA);
+		const bufferB = serializer.encode(dataB);
+		const decodedA = serializer.decode(bufferA);
+		const decodedB = serializer.decode(bufferB);
+
+		expect(decodedA).toEqual(dataA);
+		expect(decodedA).toHaveProperty('a');
+		expect(decodedA).toHaveProperty('b');
+		expect(decodedB).toEqual(dataB);
+		expect(decodedB).toHaveProperty('a');
+		expect(decodedB).toHaveProperty('b');
+	});
+
+	it('should work with z.nullable object', () => {
+		const schema = z.object({ a: z.string(), b: z.nullable(z.object({ c: z.string() })), d: z.number().int().nonnegative() });
+		const serializer = fromSchema(schema);
+
+		const dataA = { a: 'hello', b: { c: 'world' }, d: 123 };
+		const dataB = { a: 'hello', b: null, d: 123 };
+
+		const bufferA = serializer.encode(dataA);
+		const bufferB = serializer.encode(dataB);
+		const decodedA = serializer.decode(bufferA);
+		const decodedB = serializer.decode(bufferB);
+
+		expect(decodedA).toEqual(dataA);
+		expect(decodedA).toHaveProperty('a');
+		expect(decodedA).toHaveProperty('b');
+		expect(decodedB).toEqual(dataB);
+		expect(decodedB).toHaveProperty('a');
+		expect(decodedB).toHaveProperty('b');
 	});
 
 	it('should throw with unsupported effect', () => {
 		const schema = z.object({ d: z.string().transform((v) => v.length) });
 
 		expect(() => fromSchema(schema)).toThrow('Unsupported effect');
-	});
-
-	it('should throw with .optional', () => {
-		const schema = z.object({ a: z.string(), b: z.string().optional() });
-
-		expect(() => fromSchema(schema)).toThrow('Unsupported schema at: b');
-	});
-
-	it('should throw with .nullable', () => {
-		const schema = z.object({ a: z.string(), b: z.string().nullable() });
-
-		expect(() => fromSchema(schema)).toThrow('Unsupported schema at: b');
 	});
 
 	it('should throw when encoding unknown type', () => {
@@ -451,5 +519,151 @@ describe('fromSchema', () => {
 		serializer.blocks[0].type = 'never' as any;
 
 		expect(() => serializer.decode(new Uint8Array())).toThrow('Unknown type: never');
+	});
+});
+
+describe('blocks', () => {
+	it('should work', () => {
+		const schema = z.object({ a: z.string(), b: z.number().int().nonnegative() });
+		const serializer = fromSchema(schema);
+
+		expect(serializer.blocks).toEqual([
+			{
+				block: 'primitive',
+				type: 'string',
+				path: ['a'],
+			},
+			{
+				block: 'primitive',
+				type: 'uint',
+				path: ['b'],
+			},
+		]);
+	});
+
+	it('should work with z.discriminatedUnion', () => {
+		const schema = z.discriminatedUnion('type', [
+			z.object({ type: z.literal('a'), a: z.string() }),
+			z.object({ type: z.literal('b'), b: z.number() }),
+		]);
+		const serializer = fromSchema(schema);
+
+		expect(serializer.blocks).toEqual([
+			{
+				block: 'discriminator',
+				type: 'string',
+				options: [
+					[
+						'a',
+						[
+							{
+								block: 'primitive',
+								type: 'string',
+								path: ['a'],
+							},
+						],
+					],
+					[
+						'b',
+						[
+							{
+								block: 'primitive',
+								type: 'float',
+								path: ['b'],
+							},
+						],
+					],
+				],
+				discriminator: 'type',
+				path: [],
+			},
+		]);
+	});
+
+	it('should output json serializable blocks', () => {
+		const schema = z.discriminatedUnion('type', [
+			z.object({ type: z.literal('a'), a: z.string(), c: z.optional(z.object({ d: z.string() })) }),
+			z.object({ type: z.literal('b'), b: z.number(), c: z.boolean(), e: z.array(z.string()) }),
+		]);
+		const serializer = fromSchema(schema);
+
+		const json = JSON.stringify(serializer.blocks);
+		expect(JSON.parse(json)).toEqual(serializer.blocks);
+	});
+});
+
+describe('fromBlocks', () => {
+	it('should work', () => {
+		const blocks = [
+			{
+				block: 'primitive',
+				type: 'string',
+				path: ['a'],
+			},
+			{
+				block: 'primitive',
+				type: 'uint',
+				path: ['b'],
+			},
+		] satisfies Block[];
+
+		const serializer = fromBlocks(blocks);
+
+		const dataA = { a: 'hello', b: 123 };
+		const dataB = { a: 'world', b: 456 };
+
+		const bufferA = serializer.encode(dataA);
+		const bufferB = serializer.encode(dataB);
+		const decodedA = serializer.decode(bufferA);
+		const decodedB = serializer.decode(bufferB);
+
+		expect(decodedA).toEqual(dataA);
+		expect(decodedB).toEqual(dataB);
+	});
+
+	it('should work with z.discriminatedUnion', () => {
+		const blocks = [
+			{
+				block: 'discriminator',
+				type: 'string',
+				options: [
+					[
+						'a',
+						[
+							{
+								block: 'primitive',
+								type: 'string',
+								path: ['a'],
+							},
+						],
+					],
+					[
+						'b',
+						[
+							{
+								block: 'primitive',
+								type: 'float',
+								path: ['b'],
+							},
+						],
+					],
+				],
+				discriminator: 'type',
+				path: [],
+			},
+		] satisfies Block[];
+
+		const serializer = fromBlocks(blocks);
+
+		const dataA = { type: 'a', a: 'hello' };
+		const dataB = { type: 'b', b: 456 };
+
+		const bufferA = serializer.encode(dataA);
+		const bufferB = serializer.encode(dataB);
+		const decodedA = serializer.decode(bufferA);
+		const decodedB = serializer.decode(bufferB);
+
+		expect(decodedA).toEqual(dataA);
+		expect(decodedB).toEqual(dataB);
 	});
 });

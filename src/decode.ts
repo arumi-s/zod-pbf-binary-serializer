@@ -1,5 +1,4 @@
 import type Pbf from 'pbf';
-import type { Primitive } from 'zod';
 import type { Block, PrimitiveBlockType } from './types/block';
 
 /**
@@ -51,6 +50,10 @@ const decodeBuffer = (pbf: Pbf): Uint8Array => {
 	return pbf.readBytes();
 };
 
+const decodeNull = (pbf: Pbf): null => {
+	return null;
+};
+
 const decodeBooleanArray = (pbf: Pbf, length: number): boolean[] => {
 	const array: boolean[] = new Array(length);
 	const bits = pbf.readBytes();
@@ -73,7 +76,10 @@ const chooseDecoder = (type: PrimitiveBlockType) => {
 		return decodeBoolean;
 	} else if (type === 'buffer') {
 		return decodeBuffer;
+	} else if (type === 'null') {
+		return decodeNull;
 	}
+
 	throw new Error(`Unknown type: ${type}`);
 };
 
@@ -81,10 +87,12 @@ export function decode(pbf: Pbf, blocks: Block[], data: any = {}) {
 	for (const block of blocks) {
 		if (block.block === 'discriminator') {
 			const decoder = chooseDecoder(block.type);
-			const value = decoder(pbf);
-			data = setter(data, [...block.path, block.discriminator], value);
+			const discriminatorValue = decoder(pbf);
+			if (block.discriminator !== '') {
+				data = setter(data, [...block.path, block.discriminator], discriminatorValue);
+			}
 
-			const selected = block.options.get(value as Primitive);
+			const selected = block.options.find(([key]) => key === discriminatorValue)?.[1];
 			if (selected) {
 				data = decode(pbf, selected, data);
 			}

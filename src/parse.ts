@@ -15,9 +15,9 @@ export function parseSchema(schema: SerializableSchema, blocks: Block[] = [], pa
 	// z.object
 	if (schema._def.typeName === ZodFirstPartyTypeKind.ZodObject) {
 		const shape = schema._def.shape();
-		for (const i in shape) {
+		for (const key in shape) {
 			// parse schema recursively for each property
-			parseSchema(shape[i], blocks, [...path, i]);
+			parseSchema(shape[key], blocks, [...path, key]);
 		}
 
 		return blocks;
@@ -43,7 +43,7 @@ export function parseSchema(schema: SerializableSchema, blocks: Block[] = [], pa
 		const type = types.length === 1 ? types[0] : types.every((v) => ['int', 'float'].includes(v)) ? 'float' : null;
 		if (type === null) {
 			// throw an error if mixed types are used
-			throw new Error('Could not determine the type of the discriminated union');
+			throw new Error('Could not determine the type of the discriminator');
 		}
 		const discriminator = schema._def.discriminator;
 
@@ -51,13 +51,30 @@ export function parseSchema(schema: SerializableSchema, blocks: Block[] = [], pa
 		blocks.unshift({
 			block: 'discriminator',
 			type,
-			options: new Map(
-				Array.from(schema._def.optionsMap.entries()).map(
-					// parse schema recursively for each option, but filter out the discriminator because it's already added
-					([key, option]) => [key, parseSchema(option, [], []).filter((block) => block.path.join('.') !== discriminator)] as const,
-				),
+			options: Array.from(schema._def.optionsMap.entries()).map(
+				// parse schema recursively for each option, but filter out the discriminator because it's already added
+				([key, option]) => [key, parseSchema(option, [], []).filter((block) => block.path.join('.') !== discriminator)] as const,
 			),
-			discriminator: discriminator,
+			discriminator,
+			path,
+		});
+
+		return blocks;
+	}
+
+	// z.optional or z.nullable
+	if (schema._def.typeName === ZodFirstPartyTypeKind.ZodOptional || schema._def.typeName === ZodFirstPartyTypeKind.ZodNullable) {
+		// we don't distinguish between 'value not exist' (!Object.prototype.hasOwnProperty) and 'value equals undefined' (typeof value === 'undefined') because zod doesn't do so
+
+		blocks.push({
+			block: 'discriminator',
+			type: 'uint',
+			options: [
+				[0, []], // value not exist or value equals undefined
+				[1, parseSchema(schema._def.innerType, [], path)], // value exists and not null
+				[2, [{ block: 'primitive', type: 'null', path }]], // value exists and is null
+			],
+			discriminator: '',
 			path,
 		});
 
