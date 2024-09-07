@@ -46,6 +46,10 @@ const decodeBoolean = (pbf: Pbf): boolean => {
 	return pbf.readBoolean();
 };
 
+const decodeDate = (pbf: Pbf): Date => {
+	return new Date(pbf.readSFixed64());
+};
+
 const decodeBuffer = (pbf: Pbf): Uint8Array => {
 	return pbf.readBytes();
 };
@@ -74,6 +78,8 @@ const chooseDecoder = (type: PrimitiveBlockType) => {
 		return decodeUint;
 	} else if (type === 'boolean') {
 		return decodeBoolean;
+	} else if (type === 'date') {
+		return decodeDate;
 	} else if (type === 'buffer') {
 		return decodeBuffer;
 	} else if (type === 'null') {

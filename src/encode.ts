@@ -32,6 +32,10 @@ const encodeBoolean = (value: unknown, pbf: Pbf): void => {
 	pbf.writeBoolean(value as boolean);
 };
 
+const encodeDate = (value: unknown, pbf: Pbf): void => {
+	pbf.writeSFixed64((value as Date).getTime());
+};
+
 const encodeBuffer = (value: unknown, pbf: Pbf): void => {
 	pbf.writeBytes(value as Uint8Array);
 };
@@ -57,6 +61,8 @@ const chooseEncoder = (type: PrimitiveBlockType) => {
 		return encodeUint;
 	} else if (type === 'boolean') {
 		return encodeBoolean;
+	} else if (type === 'date') {
+		return encodeDate;
 	} else if (type === 'buffer') {
 		return encodeBuffer;
 	} else if (type === 'null') {

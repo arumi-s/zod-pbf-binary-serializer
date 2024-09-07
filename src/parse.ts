@@ -53,7 +53,7 @@ export function parseSchema(schema: SerializableSchema, blocks: Block[] = [], pa
 			type,
 			options: Array.from(schema._def.optionsMap.entries()).map(
 				// parse schema recursively for each option, but filter out the discriminator because it's already added
-				([key, option]) => [key, parseSchema(option, [], []).filter((block) => block.path.join('.') !== discriminator)] as const,
+				([key, option]) => [key, parseSchema(option, [], []).filter((block) => block.path.join('.') !== discriminator)],
 			),
 			discriminator,
 			path,
@@ -81,8 +81,8 @@ export function parseSchema(schema: SerializableSchema, blocks: Block[] = [], pa
 		return blocks;
 	}
 
-	// z.string
-	if (schema._def.typeName === ZodFirstPartyTypeKind.ZodString) {
+	// z.string or z.enum
+	if (schema._def.typeName === ZodFirstPartyTypeKind.ZodString || schema._def.typeName === ZodFirstPartyTypeKind.ZodEnum) {
 		blocks.push({
 			block: 'primitive',
 			type: 'string',
@@ -117,6 +117,17 @@ export function parseSchema(schema: SerializableSchema, blocks: Block[] = [], pa
 		blocks.push({
 			block: 'primitive',
 			type: 'boolean',
+			path,
+		});
+
+		return blocks;
+	}
+
+	// z.date
+	if (schema._def.typeName === ZodFirstPartyTypeKind.ZodDate) {
+		blocks.push({
+			block: 'primitive',
+			type: 'date',
 			path,
 		});
 

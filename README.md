@@ -24,6 +24,7 @@ npm i zod-pbf-binary-serializer
 - z.instanceof(Uint8Array)
 - z.discriminatedUnion
 - z.literal(string | number | boolean)
+- z.enum
 - z.optional
 - z.nullable
 

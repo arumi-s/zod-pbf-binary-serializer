@@ -1,14 +1,16 @@
 import type { z } from 'zod';
 
 export type SerializableDef =
-	| z.ZodArrayDef
-	| z.ZodBooleanDef
-	| z.ZodNumberDef
-	| z.ZodObjectDef
 	| z.ZodStringDef
+	| z.ZodNumberDef
+	| z.ZodBooleanDef
+	| z.ZodDateDef
+	| z.ZodArrayDef
+	| z.ZodObjectDef
 	| z.ZodOptionalDef<SerializableSchema>
 	| z.ZodNullableDef<SerializableSchema>
-	| z.ZodLiteralDef<SerializableSchema>
+	| z.ZodLiteralDef<string | number | boolean>
+	| z.ZodEnumDef<z.EnumValues>
 	| z.ZodEffectsDef<SerializableSchema>
 	| z.ZodDiscriminatedUnionDef<string>;
 

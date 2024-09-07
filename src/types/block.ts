@@ -2,7 +2,7 @@ import type { Primitive } from 'zod';
 
 export type Path = string[];
 
-export type PrimitiveBlockType = 'string' | 'float' | 'int' | 'uint' | 'boolean' | 'buffer' | 'null';
+export type PrimitiveBlockType = 'string' | 'float' | 'int' | 'uint' | 'boolean' | 'date' | 'buffer' | 'null';
 
 export type PrimitiveBlock = {
 	block: 'primitive';
@@ -19,7 +19,7 @@ export type ArrayBlock = {
 
 export type DiscriminatorBlock = {
 	block: 'discriminator';
-	type: Exclude<PrimitiveBlockType, 'buffer'>;
+	type: Exclude<PrimitiveBlockType, 'date' | 'buffer'>;
 	options: [Primitive, Block[]][];
 	discriminator: string;
 	path: Path;

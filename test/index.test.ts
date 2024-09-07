@@ -107,6 +107,128 @@ describe('fromSchema', () => {
 		expect(decoded).toEqual(data);
 	});
 
+	it('should work with z.date', () => {
+		const schema = z.date();
+		const serializer = fromSchema(schema);
+
+		const data = new Date(2023, 0, 1, 12, 34, 56, 789);
+
+		const buffer = serializer.encode(data);
+		const decoded = serializer.decode(buffer);
+
+		expect(serializer.blocks[0].block).toEqual('primitive');
+		expect(serializer.blocks[0].type).toEqual('date');
+		expect(decoded).toEqual(data);
+	});
+
+	it('should work with z.literal string', () => {
+		const schema = z.literal('hello');
+		const serializer = fromSchema(schema);
+
+		const data = 'hello';
+
+		const buffer = serializer.encode(data);
+		const decoded = serializer.decode(buffer);
+
+		expect(serializer.blocks[0].block).toEqual('primitive');
+		expect(serializer.blocks[0].type).toEqual('string');
+		expect(decoded).toEqual(data);
+	});
+
+	it('should work with z.literal number', () => {
+		const schema = z.literal(123);
+		const serializer = fromSchema(schema);
+
+		const data = 123;
+
+		const buffer = serializer.encode(data);
+		const decoded = serializer.decode(buffer);
+
+		expect(serializer.blocks[0].block).toEqual('primitive');
+		expect(serializer.blocks[0].type).toEqual('float');
+		expect(decoded).toEqual(data);
+	});
+
+	it('should work with z.literal boolean', () => {
+		const schema = z.literal(true);
+		const serializer = fromSchema(schema);
+
+		const data = true;
+
+		const buffer = serializer.encode(data);
+		const decoded = serializer.decode(buffer);
+
+		expect(serializer.blocks[0].block).toEqual('primitive');
+		expect(serializer.blocks[0].type).toEqual('boolean');
+		expect(decoded).toEqual(data);
+	});
+
+	it('should throw with unsupported literal type', () => {
+		const schema = z.literal(Symbol('hello')) as any;
+
+		expect(() => fromSchema(schema)).toThrow('Unsupported literal value');
+	});
+
+	it('should work with z.enum', () => {
+		const schema = z.enum(['a', 'b', 'c']);
+		const serializer = fromSchema(schema);
+
+		const data = 'a';
+
+		const buffer = serializer.encode(data);
+		const decoded = serializer.decode(buffer);
+
+		expect(serializer.blocks[0].block).toEqual('primitive');
+		expect(serializer.blocks[0].type).toEqual('string');
+		expect(decoded).toEqual(data);
+	});
+
+	it('should work with z.object', () => {
+		const schema = z.object({
+			a: z.string(),
+			b: z.number(),
+			c: z.boolean(),
+			d: z.array(z.string()),
+		});
+		const serializer = fromSchema(schema);
+
+		const data = {
+			a: 'hello',
+			b: 123,
+			c: true,
+			d: ['hello', 'world'],
+		};
+
+		const buffer = serializer.encode(data);
+		const decoded = serializer.decode(buffer);
+
+		expect(serializer.blocks[0].type).toEqual('string');
+		expect(serializer.blocks[1].type).toEqual('float');
+		expect(serializer.blocks[2].type).toEqual('boolean');
+		expect(decoded).toEqual(data);
+	});
+
+	it('should work with z.instanceof(Uint8Array)', () => {
+		const schema = z.object({ d: z.instanceof(Uint8Array).refine((v) => v.length === 8) });
+		const serializer = fromSchema(schema);
+
+		const d = new Uint8Array([0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88]);
+		const data = { d };
+
+		const buffer = serializer.encode(data);
+		const decoded = serializer.decode(buffer);
+
+		expect(serializer.blocks[0].block).toEqual('primitive');
+		expect(serializer.blocks[0].type).toEqual('buffer');
+		expect(decoded).toEqual(data);
+	});
+
+	it('should throw with unsupported type', () => {
+		const schema = z.object({ d: z.bigint() });
+
+		expect(() => fromSchema(schema)).toThrow('Unsupported schema at: d');
+	});
+
 	it('should work with z.array of strings', () => {
 		const schema = z.array(z.string());
 		const serializer = fromSchema(schema);
@@ -125,7 +247,7 @@ describe('fromSchema', () => {
 		const schema = z.array(z.number());
 		const serializer = fromSchema(schema);
 
-		const data = [123.1, -456.2, 789.3, Number.MAX_VALUE, Number.MIN_VALUE];
+		const data = [123.1, -456.2, 789.3, NaN, +0, -0, Number.MAX_VALUE, Number.MIN_VALUE];
 
 		const buffer = serializer.encode(data);
 		const decoded = serializer.decode(buffer);
@@ -178,6 +300,20 @@ describe('fromSchema', () => {
 		expect(decoded).toEqual(data);
 	});
 
+	it('should work with z.array of dates', () => {
+		const schema = z.array(z.date());
+		const serializer = fromSchema(schema);
+
+		const data = [new Date(2023, 0, 1, 12, 34, 56, 789), new Date(0), new Date(8640000000000000), new Date(-8640000000000000)];
+
+		const buffer = serializer.encode(data);
+		const decoded = serializer.decode(buffer);
+
+		expect(serializer.blocks[0].block).toEqual('array');
+		expect(serializer.blocks[0].type).toEqual('date');
+		expect(decoded).toEqual(data);
+	});
+
 	it('should work with z.array of objects', () => {
 		const schema = z.array(z.object({ a: z.string(), b: z.number().int(), c: z.array(z.string()) }));
 		const serializer = fromSchema(schema);
@@ -211,100 +347,6 @@ describe('fromSchema', () => {
 		expect(serializer.blocks[0].block).toEqual('array');
 		expect(serializer.blocks[0].type).toEqual('buffer');
 		expect(decoded).toEqual(data);
-	});
-
-	it('should work with z.object', () => {
-		const schema = z.object({
-			a: z.string(),
-			b: z.number(),
-			c: z.boolean(),
-			d: z.array(z.string()),
-		});
-		const serializer = fromSchema(schema);
-
-		const data = {
-			a: 'hello',
-			b: 123,
-			c: true,
-			d: ['hello', 'world'],
-		};
-
-		const buffer = serializer.encode(data);
-		const decoded = serializer.decode(buffer);
-
-		expect(serializer.blocks[0].type).toEqual('string');
-		expect(serializer.blocks[1].type).toEqual('float');
-		expect(serializer.blocks[2].type).toEqual('boolean');
-		expect(decoded).toEqual(data);
-	});
-
-	it('should work with z.instanceof(Uint8Array)', () => {
-		const schema = z.object({ d: z.instanceof(Uint8Array).refine((v) => v.length === 8) });
-		const serializer = fromSchema(schema);
-
-		const d = new Uint8Array([0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88]);
-		const data = { d };
-
-		const buffer = serializer.encode(data);
-		const decoded = serializer.decode(buffer);
-
-		expect(serializer.blocks[0].block).toEqual('primitive');
-		expect(serializer.blocks[0].type).toEqual('buffer');
-		expect(decoded).toEqual(data);
-	});
-
-	it('should throw with unsupported type', () => {
-		const schema = z.object({ d: z.bigint() });
-
-		expect(() => fromSchema(schema)).toThrow('Unsupported schema at: d');
-	});
-
-	it('should work with z.literal string', () => {
-		const schema = z.object({ d: z.literal('hello') });
-		const serializer = fromSchema(schema);
-
-		const data = { d: 'hello' } as const;
-
-		const buffer = serializer.encode(data);
-		const decoded = serializer.decode(buffer);
-
-		expect(serializer.blocks[0].block).toEqual('primitive');
-		expect(serializer.blocks[0].type).toEqual('string');
-		expect(decoded).toEqual(data);
-	});
-
-	it('should work with z.literal number', () => {
-		const schema = z.object({ d: z.literal(123) });
-		const serializer = fromSchema(schema);
-
-		const data = { d: 123 } as const;
-
-		const buffer = serializer.encode(data);
-		const decoded = serializer.decode(buffer);
-
-		expect(serializer.blocks[0].block).toEqual('primitive');
-		expect(serializer.blocks[0].type).toEqual('float');
-		expect(decoded).toEqual(data);
-	});
-
-	it('should work with z.literal boolean', () => {
-		const schema = z.object({ d: z.literal(true) });
-		const serializer = fromSchema(schema);
-
-		const data = { d: true } as const;
-
-		const buffer = serializer.encode(data);
-		const decoded = serializer.decode(buffer);
-
-		expect(serializer.blocks[0].block).toEqual('primitive');
-		expect(serializer.blocks[0].type).toEqual('boolean');
-		expect(decoded).toEqual(data);
-	});
-
-	it('should throw with unsupported literal type', () => {
-		const schema = z.literal(Symbol('hello')) as any;
-
-		expect(() => fromSchema(schema)).toThrow('Unsupported literal value');
 	});
 
 	it('should work with z.discriminatedUnion using string discriminator', () => {
