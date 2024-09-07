@@ -19,6 +19,7 @@ npm i zod-pbf-binary-serializer
 - z.string
 - z.number
 - z.boolean
+- z.date
 - z.array
 - z.object
 - z.instanceof(Uint8Array)
