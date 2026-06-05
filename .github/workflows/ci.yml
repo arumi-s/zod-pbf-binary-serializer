@@ -48,7 +48,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
       - run: pnpm ci
-      - run: pnpm dlx semantic-release@20 --branches master
+      - run: pnpm dlx semantic-release@24 --branches master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -31,6 +31,7 @@
 	},
 	"types": "./dist/index.d.ts",
 	"scripts": {
+		"format": "prettier --write .",
 		"build": "tsup --config tsup.config.ts",
 		"test": "vitest run",
 		"prepublishOnly": "pnpm run build"
@@ -47,7 +48,6 @@
 		"@semantic-release/commit-analyzer": "^13.0.0",
 		"@semantic-release/git": "^10.0.1",
 		"@semantic-release/github": "^10.3.3",
-		"@semantic-release/npm": "^12.0.1",
 		"@semantic-release/release-notes-generator": "^14.0.1",
 		"@vitest/coverage-v8": "^2.0.5",
 		"prettier": "3.3.3",
