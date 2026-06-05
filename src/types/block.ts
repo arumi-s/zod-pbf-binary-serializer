@@ -1,4 +1,4 @@
-import type { Primitive } from 'zod';
+import type { Primitive } from 'zod/v3';
 
 export type Path = string[];
 

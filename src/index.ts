@@ -1,5 +1,5 @@
 import Pbf from 'pbf';
-import type { TypeOf } from 'zod';
+import type { TypeOf } from 'zod/v3';
 import type { SerializableSchema } from './types/schema';
 import { parseSchema } from './parse';
 import { encode } from './encode';

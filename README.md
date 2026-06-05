@@ -32,6 +32,7 @@ npm i zod-pbf-binary-serializer
 ## Usage
 
 ```typescript
+import { z } from 'zod/v3';
 import { fromSchema } from 'zod-pbf-binary-serializer';
 
 const schema = z.object({
@@ -69,6 +70,7 @@ console.log(decoded);
 ### Export and import parsed blocks
 
 ```typescript
+import { z } from 'zod/v3';
 import { fromSchema, fromBlocks } from 'zod-pbf-binary-serializer';
 
 const schema = z.object({
