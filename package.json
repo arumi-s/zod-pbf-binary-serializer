@@ -1,6 +1,6 @@
 {
 	"name": "zod-pbf-binary-serializer",
-	"version": "2.0.0",
+	"version": "2.0.1",
 	"description": "Serialize and deserialize zod schemas to and from a compact binary format",
 	"type": "module",
 	"sideEffects": false,
@@ -28,19 +28,34 @@
 	"exports": {
 		"./package.json": "./package.json",
 		".": {
-			"types": "./dist/index.d.ts",
-			"require": "./dist/index.cjs",
-			"import": "./dist/index.js"
+			"import": {
+				"types": "./dist/index.d.ts",
+				"default": "./dist/index.js"
+			},
+			"require": {
+				"types": "./dist/index.d.cts",
+				"default": "./dist/index.cjs"
+			}
 		},
 		"./v3": {
-			"types": "./dist/v3/index.d.cts",
-			"import": "./dist/v3/index.js",
-			"require": "./dist/v3/index.cjs"
+			"import": {
+				"types": "./dist/v3/index.d.ts",
+				"default": "./dist/v3/index.js"
+			},
+			"require": {
+				"types": "./dist/v3/index.d.cts",
+				"default": "./dist/v3/index.cjs"
+			}
 		},
 		"./v4": {
-			"types": "./dist/v4/index.d.ts",
-			"require": "./dist/v4/index.cjs",
-			"import": "./dist/v4/index.js"
+			"import": {
+				"types": "./dist/v4/index.d.ts",
+				"default": "./dist/v4/index.js"
+			},
+			"require": {
+				"types": "./dist/v4/index.d.cts",
+				"default": "./dist/v4/index.cjs"
+			}
 		}
 	},
 	"types": "./dist/index.d.ts",
