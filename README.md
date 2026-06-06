@@ -31,9 +31,11 @@ npm i zod-pbf-binary-serializer
 
 ## Usage
 
+### Zod v4
+
 ```typescript
-import { z } from 'zod/v3';
-import { fromSchema } from 'zod-pbf-binary-serializer';
+import { z } from 'zod/v4';
+import { fromSchema } from 'zod-pbf-binary-serializer/v4';
 
 const schema = z.object({
 	a: z.string(),
@@ -67,11 +69,93 @@ console.log(decoded);
 // { a: 'apple', b: 123, c: true, d: ['hello', 'world'] }
 ```
 
-### Export and import parsed blocks
+### Export and import parsed blocks with zod v4
+
+```typescript
+import { z } from 'zod/v4';
+import { fromSchema, fromBlocks } from 'zod-pbf-binary-serializer/v4';
+
+const schema = z.object({
+	a: z.string(),
+	b: z.number(),
+	c: z.boolean(),
+	d: z.array(z.string()),
+});
+
+const serializer = fromSchema(schema);
+
+console.log(serializer.blocks);
+/**
+ * [
+ *   {
+ *     block: 'primitive',
+ *     type: 'string',
+ *     path: ['a'],
+ *   },
+ *   {
+ *     block: 'primitive',
+ *     type: 'float',
+ *     path: ['b'],
+ *   },
+ *   {
+ *     block: 'primitive',
+ *     type: 'boolean',
+ *     path: ['c'],
+ *   },
+ *   {
+ *     block: 'array',
+ *     type: 'string',
+ *     path: ['d'],
+ *   },
+ * ]
+ */
+
+const reconstructedSerializer = fromBlocks(serializer.blocks);
+```
+
+### Zod v3
 
 ```typescript
 import { z } from 'zod/v3';
-import { fromSchema, fromBlocks } from 'zod-pbf-binary-serializer';
+import { fromSchema } from 'zod-pbf-binary-serializer/v3';
+
+const schema = z.object({
+	a: z.string(),
+	b: z.number(),
+	c: z.boolean(),
+	d: z.array(z.string()),
+});
+
+const serializer = fromSchema(schema);
+
+const data = {
+	a: 'apple',
+	b: 123,
+	c: true,
+	d: ['hello', 'world'],
+};
+
+const buffer = serializer.encode(data);
+console.log(buffer);
+/**
+ * Uint8Array(28) [
+ *  5, 97, 112, 112, 108, 101,
+ *  0, 0, 0, 0, 0, 192, 94, 64,
+ *  1,
+ *  2, 5, 104, 101, 108, 108, 111, 5, 119, 111, 114, 108, 100
+ * ]
+ */
+
+const decoded = serializer.decode(buffer);
+console.log(decoded);
+// { a: 'apple', b: 123, c: true, d: ['hello', 'world'] }
+```
+
+### Export and import parsed blocks with zod v3
+
+```typescript
+import { z } from 'zod/v3';
+import { fromSchema, fromBlocks } from 'zod-pbf-binary-serializer/v3';
 
 const schema = z.object({
 	a: z.string(),

@@ -1,6 +1,6 @@
-import { ZodFirstPartyTypeKind, ZodParsedType, getParsedType, util } from 'zod/v3';
 import type { RefinementEffect } from 'zod/v3';
-import type { Block, Path } from './types/block';
+import { ZodFirstPartyTypeKind, ZodParsedType, getParsedType, util } from 'zod/v3';
+import type { Block, Path } from '../block';
 import type { SerializableSchema } from './types/schema';
 
 /**

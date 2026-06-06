@@ -1,5 +1,5 @@
 import type Pbf from 'pbf';
-import type { Block, PrimitiveBlockType } from './types/block';
+import type { Block, PrimitiveBlockType } from './block';
 
 /**
  * @description get the value from an object using a path

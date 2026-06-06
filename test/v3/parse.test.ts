@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { z } from 'zod/v3';
-import { isRefinementInstanceOf } from '../src/parse';
+import { isRefinementInstanceOf } from '../../src/v3/parse';
 
 describe('isRefinementInstanceOf', () => {
 	it('should work with Uint8Array and Buffer', () => {

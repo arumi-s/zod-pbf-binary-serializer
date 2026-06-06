@@ -1,6 +1,6 @@
 {
 	"name": "zod-pbf-binary-serializer",
-	"version": "1.3.1",
+	"version": "2.0.0",
 	"description": "Serialize and deserialize zod schemas to and from a compact binary format",
 	"type": "module",
 	"sideEffects": false,
@@ -26,8 +26,22 @@
 	"main": "./dist/index.cjs",
 	"module": "./dist/index.js",
 	"exports": {
-		"require": "./dist/index.cjs",
-		"import": "./dist/index.js"
+		"./package.json": "./package.json",
+		".": {
+			"types": "./dist/index.d.ts",
+			"require": "./dist/index.cjs",
+			"import": "./dist/index.js"
+		},
+		"./v3": {
+			"types": "./dist/v3/index.d.cts",
+			"import": "./dist/v3/index.js",
+			"require": "./dist/v3/index.cjs"
+		},
+		"./v4": {
+			"types": "./dist/v4/index.d.ts",
+			"require": "./dist/v4/index.cjs",
+			"import": "./dist/v4/index.js"
+		}
 	},
 	"types": "./dist/index.d.ts",
 	"scripts": {
@@ -49,12 +63,13 @@
 		"@semantic-release/git": "^10.0.1",
 		"@semantic-release/github": "^10.3.3",
 		"@semantic-release/release-notes-generator": "^14.0.1",
-		"@vitest/coverage-v8": "^2.0.5",
+		"@types/node": "^22.19.19",
+		"@vitest/coverage-v8": "^2.1.9",
 		"prettier": "3.3.3",
 		"semantic-release": "^24.1.0",
-		"tsup": "8.2.3",
+		"tsup": "8.5.1",
 		"typescript": "5.5.4",
-		"vitest": "2.0.4"
+		"vitest": "2.1.9"
 	},
 	"packageManager": "pnpm@11.5.2"
 }

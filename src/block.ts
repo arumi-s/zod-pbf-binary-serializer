@@ -1,6 +1,6 @@
-import type { Primitive } from 'zod/v3';
-
 export type Path = string[];
+
+export type Primitive = string | number | bigint | boolean | symbol | null | undefined;
 
 export type PrimitiveBlockType = 'string' | 'float' | 'int' | 'uint' | 'boolean' | 'date' | 'buffer' | 'null';
 
