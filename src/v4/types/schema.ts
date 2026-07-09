@@ -12,4 +12,5 @@ export type SerializableSchema =
 	| z.ZodLiteral
 	| z.ZodEnum
 	| z.ZodDiscriminatedUnion
-	| z.ZodCustom;
+	| z.ZodCustom
+	| z.ZodCodec;

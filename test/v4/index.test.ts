@@ -589,6 +589,81 @@ describe('fromSchema', () => {
 		expect(() => fromSchema(schema as any)).toThrow('Unsupported effect');
 	});
 
+	it('should work with z.codec (iso datetime to date)', () => {
+		const isoDatetimeToDate = z.codec(z.iso.datetime(), z.date(), {
+			decode: (isoString) => new Date(isoString),
+			encode: (date) => date.toISOString(),
+		});
+		const schema = z.object({ d: isoDatetimeToDate });
+		const serializer = fromSchema(schema);
+
+		const data = { d: new Date(2023, 0, 1, 12, 34, 56, 789) };
+
+		const buffer = serializer.encode(data);
+		const decoded = serializer.decode(buffer);
+
+		expect(serializer.blocks[0].block).toEqual('primitive');
+		expect(serializer.blocks[0].type).toEqual('date');
+		expect(decoded).toEqual(data);
+		expectTypeOf(decoded).toEqualTypeOf<z.output<typeof schema>>();
+	});
+
+	it('should work with z.codec (string to number)', () => {
+		const stringToNumber = z.codec(z.string().regex(z.regexes.number), z.number(), {
+			decode: (str) => Number.parseFloat(str),
+			encode: (num) => num.toString(),
+		});
+		const schema = z.object({ n: stringToNumber });
+		const serializer = fromSchema(schema);
+
+		const data = { n: 123.456 };
+
+		const buffer = serializer.encode(data);
+		const decoded = serializer.decode(buffer);
+
+		expect(serializer.blocks[0].block).toEqual('primitive');
+		expect(serializer.blocks[0].type).toEqual('float');
+		expect(decoded).toEqual(data);
+		expectTypeOf(decoded).toEqualTypeOf<z.output<typeof schema>>();
+	});
+
+	it('should work with z.codec (base64 to bytes)', () => {
+		const base64ToBytes = z.codec(z.base64(), z.instanceof(Uint8Array), {
+			decode: (base64String) => z.util.base64ToUint8Array(base64String),
+			encode: (bytes) => z.util.uint8ArrayToBase64(bytes),
+		});
+		const schema = z.object({ b: base64ToBytes });
+		const serializer = fromSchema(schema);
+
+		const data = { b: new Uint8Array([0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88]) };
+
+		const buffer = serializer.encode(data);
+		const decoded = serializer.decode(buffer);
+
+		expect(serializer.blocks[0].block).toEqual('primitive');
+		expect(serializer.blocks[0].type).toEqual('buffer');
+		expect(decoded).toEqual(data);
+		expectTypeOf(decoded).toEqualTypeOf<z.output<typeof schema>>();
+	});
+
+	it('should work with z.codec as top-level schema', () => {
+		const isoDatetimeToDate = z.codec(z.iso.datetime(), z.date(), {
+			decode: (isoString) => new Date(isoString),
+			encode: (date) => date.toISOString(),
+		});
+		const serializer = fromSchema(isoDatetimeToDate);
+
+		const data = new Date(2023, 5, 15, 10, 30, 0);
+
+		const buffer = serializer.encode(data);
+		const decoded = serializer.decode(buffer);
+
+		expect(serializer.blocks[0].block).toEqual('primitive');
+		expect(serializer.blocks[0].type).toEqual('date');
+		expect(decoded).toEqual(data);
+		expectTypeOf(decoded).toEqualTypeOf<z.output<typeof isoDatetimeToDate>>();
+	});
+
 	it('should throw when encoding unknown type', () => {
 		const serializer = fromSchema(z.string());
 		serializer.blocks[0].type = 'unknown' as any;

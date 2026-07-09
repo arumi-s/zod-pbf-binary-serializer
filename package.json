@@ -1,6 +1,6 @@
 {
 	"name": "zod-pbf-binary-serializer",
-	"version": "2.0.1",
+	"version": "2.1.0",
 	"description": "Serialize and deserialize zod schemas to and from a compact binary format",
 	"type": "module",
 	"sideEffects": false,

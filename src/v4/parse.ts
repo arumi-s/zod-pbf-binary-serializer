@@ -238,8 +238,13 @@ export function parseSchema(schema: SerializableSchema, blocks: Block[] = [], pa
 		return blocks;
 	}
 
-	// transforms/codecs/pipes are not supported
-	if ((schema.def.type as string) === 'pipe' || (schema.def.type as string) === 'transform') {
+	// z.codec (pipe with reverseTransform)
+	if (schema.def.type === 'pipe' && typeof (schema.def as any).reverseTransform === 'function') {
+		return parseSchema((schema.def as any).out as SerializableSchema, blocks, path);
+	}
+
+	// transforms/pipes are not supported
+	if (schema.def.type === 'pipe' || (schema.def.type as string) === 'transform') {
 		throw new Error('Unsupported effect');
 	}
 

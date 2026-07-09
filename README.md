@@ -28,6 +28,7 @@ npm i zod-pbf-binary-serializer
 - z.enum
 - z.optional
 - z.nullable
+- z.codec (zod v4 only)
 
 ## Usage
 
@@ -111,6 +112,36 @@ console.log(serializer.blocks);
  */
 
 const reconstructedSerializer = fromBlocks(serializer.blocks);
+```
+
+### Using z.codec with zod v4
+
+`z.codec` allows you to define bidirectional transformations between types. The serializer will use the **output type** (`out`) to generate the binary blocks.
+
+```typescript
+import { z } from 'zod/v4';
+import { fromSchema } from 'zod-pbf-binary-serializer/v4';
+
+const isoDatetimeToDate = z.codec(z.iso.datetime(), z.date(), {
+	decode: (isoString) => new Date(isoString),
+	encode: (date) => date.toISOString(),
+});
+
+const schema = z.object({
+	createdAt: isoDatetimeToDate,
+});
+
+const serializer = fromSchema(schema);
+
+const data = {
+	createdAt: new Date('2024-01-15T10:30:00.000Z'),
+};
+
+const buffer = serializer.encode(data);
+const decoded = serializer.decode(buffer);
+
+console.log(decoded);
+// { createdAt: Date('2024-01-15T10:30:00.000Z') }
 ```
 
 ### Zod v3
